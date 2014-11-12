@@ -1,0 +1,93 @@
+var fs = require('fs');
+var http = require('http');
+var cheerio = require('cheerio');
+
+
+services = [
+	{
+		name: "otoMoto",
+		url: 'http://otomoto.pl/',
+		css_selector: '.om-count-items',
+		categories: {
+			cars: 'osobowe',
+			bikes: 'motocykle-i-quady',
+			trucks: 'dostawcze-i-ciezarowe',
+			agro: 'maszyny-rolnicze'
+		}
+	},	
+	{
+		name: "Olx",
+		url: 'http://olx.pl/motoryzacja/',
+		css_selector: '.fleft.tab.selected span:nth-child(2)',
+		categories: {
+			cars: 'samochody/',
+			bikes: 'motocykle-skutery/',
+			trucks: 'dostawcze-ciezarowe/',
+		}
+	},
+	{
+		name: "gratka",
+		url: 'http://www.gratka.pl/ogloszenia/motoryzacja/',
+		css_selector: '.wynik',
+		categories: {
+			cars: 'osobowe/lista.html?typ=1',
+			trucks: 'dostawcze/lista.html?typ=1',
+		}	
+	}
+]
+// console.log(services[0].categories.cars)
+function Service (data) {
+	this.main_url = data.url;
+	this.css_selector = data.css_selector;
+	this.categories = data.categories;
+	this.name = this.main_url.split('/')[2];
+	this.scrape = function(callback) {
+		for(var category in this.categories) {
+			this.scrapePage(this.categories[category]);
+		}
+	}
+	this.scrapePage = function(page) {
+	
+		var url = this.main_url + page
+		var adPage = ""
+		var self = this;
+		do_get(url, function(buffer, res, $) {
+			var adText = $(self.css_selector).text();
+			var ad = number_parse(adText)
+			adPage += ad + ';' + page + ';' + url.split('/')[2]
+			self.save(adPage)
+		});
+	}
+	this.save = function (output) {
+		fs.appendFile('ad' + '.csv', output + '\r' );
+		console.log(output);
+	}
+}
+
+function number_parse (string) {
+	var string_match = ""
+	var r = /\d+/g;
+	var ok = string.match(r)
+	for (var i = 0; i < ok.length; i++) {
+		string_match += ok[i];
+	};
+	return string_match
+}
+
+function do_get(url, callback) {
+	http.get(url, function(res) {
+		res.setEncoding('utf-8'); 
+		var buffer = ''
+		res.on('data', function (chunk) {
+			buffer += chunk;
+		});
+		res.on("end", function(){
+			callback(buffer, res, cheerio.load(buffer));
+		})
+	});
+}
+
+for(var i = 0; i < services.length; i++) {
+	service = new Service(services[i]);
+	service.scrape();
+}
