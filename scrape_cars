@@ -16,7 +16,7 @@ services = [
 		}
 	},	
 	{
-		name: "Olx",
+		name: "olx",
 		url: 'http://olx.pl/motoryzacja/',
 		css_selector: '.fleft.tab.selected span:nth-child(2)',
 		categories: {
@@ -31,9 +31,58 @@ services = [
 		css_selector: '.wynik',
 		categories: {
 			cars: 'osobowe/lista.html?typ=1',
+			bikes: 'motocykle/lista.html?typ=1',
 			trucks: 'dostawcze/lista.html?typ=1',
 		}	
-	}
+	},
+	{
+		name: "sprzedajemy.pl",
+		url: 'http://sprzedajemy.pl/motoryzacja/',
+		css_selector: '.tabAll em',
+		categories: {
+			cars: 'samochody-osobowe',
+			bikes: 'motocykle-i-skutery',
+			trucks: 'samochody-ciezarowe',
+			vans: 'samochody-dostawcze',
+			agro: 'maszyny-budowlane-i-rolnicze',
+			bus: 'autobusy-i-minibusy',
+			trailer: 'przyczepy-i-naczepy',
+		}
+	},
+	{
+		name: "gumtree",
+		url: 'http://www.gumtree.pl/',
+		css_selector: '.titlecount',
+		categories: {
+			cars: 'fp-samochody-osobowe/c9026',
+			bikes: 'fp-motocykle-i-skutery/c9028',
+			trucks: 'fp-samochody-dostawcze/c9027',
+			agro: 'fp-ciagniki-i-maszyny-rolnicze/c9154',
+			trailer: 'fp-przyczepy-i-naczepy/c9155',
+		}		
+	},
+	{
+		name: "autotrader",
+		url: 'http://www.autotrader.pl/',
+		css_selector: '.UpperBar.BoxResults',
+		categories: {
+			cars: 'samochody-osobowe/wszystkie?kategoria=131',
+			bikes: 'motocykle-motory/wszystkie?kategoria=167',
+			trucks: 'samochody-ciezarowe/wszystkie?kategoria=132',
+			vans: 'samochody-dostawcze/wszystkie?kategoria=1300',
+		}
+	},
+	{
+		name: "autogielda",
+		url: 'http://www.autogielda.pl/',
+		css_selector: '#bazaogloszen-wszystkich-ogloszen',
+		categories: {
+			cars: 'sprzedam.html',
+			bikes: 'motocykle.html',
+			trucks: 'dostawcze.html',
+			trailer: 'przyczepy.html',
+		}
+	},
 ]
 // console.log(services[0].categories.cars)
 function Service (data) {
@@ -54,7 +103,7 @@ function Service (data) {
 		do_get(url, function(buffer, res, $) {
 			var adText = $(self.css_selector).text();
 			var ad = number_parse(adText)
-			adPage += ad + ';' + page + ';' + url.split('/')[2]
+			adPage += ad + ';' + page + ';' + url.split('/')[2] + ';' + today
 			self.save(adPage)
 		});
 	}
@@ -91,3 +140,20 @@ for(var i = 0; i < services.length; i++) {
 	service = new Service(services[i]);
 	service.scrape();
 }
+
+
+var today = new Date();
+var dd = today.getDate();
+var mm = today.getMonth()+1; //January is 0!
+var yyyy = today.getFullYear();
+
+if(dd<10) {
+    dd='0'+dd
+} 
+
+if(mm<10) {
+    mm='0'+mm
+} 
+
+today = mm+'/'+dd+'/'+yyyy;
+// console.log(today);
